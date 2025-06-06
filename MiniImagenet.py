@@ -133,11 +133,11 @@ class MiniImagenet(Dataset):
         # [setsz, 3, resize, resize]
         support_x = torch.FloatTensor(self.setsz, 3, self.resize, self.resize)
         # [setsz]
-        support_y = np.zeros((self.setsz), dtype=np.int)
+        support_y = np.zeros((self.setsz), dtype=int)
         # [querysz, 3, resize, resize]
         query_x = torch.FloatTensor(self.querysz, 3, self.resize, self.resize)
         # [querysz]
-        query_y = np.zeros((self.querysz), dtype=np.int)
+        query_y = np.zeros((self.querysz), dtype=int)
 
         flatten_support_x = [os.path.join(self.path, item)
                              for sublist in self.support_x_batch[index] for item in sublist]

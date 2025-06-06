@@ -8,6 +8,8 @@ from PIL import Image
 import csv
 import random
 
+def pil_loader(path):
+    return Image.open(path).convert('RGB')
 
 class MiniImagenet(Dataset):
     """
@@ -47,7 +49,7 @@ class MiniImagenet(Dataset):
         mode, batchsz, n_way, k_shot, k_query, resize))
 
         if mode == 'train':
-            self.transform = transforms.Compose([lambda x: Image.open(x).convert('RGB'),
+            self.transform = transforms.Compose([pil_loader,
                                                  transforms.Resize((self.resize, self.resize)),
                                                  # transforms.RandomHorizontalFlip(),
                                                  # transforms.RandomRotation(5),
@@ -55,7 +57,7 @@ class MiniImagenet(Dataset):
                                                  transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
                                                  ])
         else:
-            self.transform = transforms.Compose([lambda x: Image.open(x).convert('RGB'),
+            self.transform = transforms.Compose([pil_loader,
                                                  transforms.Resize((self.resize, self.resize)),
                                                  transforms.ToTensor(),
                                                  transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))

@@ -46,7 +46,7 @@ def main(args):
         ('linear', [args.n_way, 32 * 5 * 5])
     ]
 
-    device = torch.device('cuda')
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     maml = Meta(args, config).to(device)
 
     tmp = filter(lambda x: x.requires_grad, maml.parameters())
@@ -110,5 +110,8 @@ if __name__ == '__main__':
     argparser.add_argument('--data_path', type=str, help='data path', default='/scratch/cq2u24/Data/l2l/miniimagenet')
 
     arg = argparser.parse_args()
+    # print(os.getcwd())
+    if os.getcwd() == '/Users/qiuchuanhang/PycharmProjects/MAML-Pytorch':
+        arg.data_path = '/Volumes/YuLin/miniimagenet'
 
     main(args=arg)

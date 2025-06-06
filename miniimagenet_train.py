@@ -107,7 +107,7 @@ if __name__ == '__main__':
     argparser.add_argument('--update_step_test', type=int, help='update steps for finetunning', default=10)
 
 
-    argparser.add_argument('--data_path', type=int, help='data path', default='/scratch/cq2u24/Data/lsl/miniimagenet')
+    argparser.add_argument('--data_path', type=str, help='data path', default='/scratch/cq2u24/Data/lsl/miniimagenet')
 
     arg = argparser.parse_args()
 

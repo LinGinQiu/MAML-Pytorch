@@ -47,8 +47,8 @@ echo "#!/bin/bash
 #SBATCH --mem=${max_memory}M
 #SBATCH -c 4
 #SBATCH --nodes=1
-#SBATCH -o log/meta_learning_test.out # 添加这行：标准输出将写入此文件
-#SBATCH -e log/meta_learning_test.err # 添加这行：标准错误将写入此文件
+#SBATCH -o log/meta_learning_test/%A-%a.out # 添加这行：标准输出将写入此文件
+#SBATCH -e log/meta_learning_test/%A-%a.err # 添加这行：标准错误将写入此文件
 
 . /etc/profile
 module purge

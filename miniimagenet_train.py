@@ -17,7 +17,7 @@ def mean_confidence_interval(accs, confidence=0.95):
     return m, h
 
 
-def main():
+def main(args):
 
     torch.manual_seed(222)
     torch.cuda.manual_seed_all(222)
@@ -55,10 +55,10 @@ def main():
     print('Total trainable tensors:', num)
 
     # batchsz here means total episode number
-    mini = MiniImagenet('/home/i/tmp/MAML-Pytorch/miniimagenet/', mode='train', n_way=args.n_way, k_shot=args.k_spt,
+    mini = MiniImagenet(args.data_path, mode='train', n_way=args.n_way, k_shot=args.k_spt,
                         k_query=args.k_qry,
                         batchsz=10000, resize=args.imgsz)
-    mini_test = MiniImagenet('/home/i/tmp/MAML-Pytorch/miniimagenet/', mode='test', n_way=args.n_way, k_shot=args.k_spt,
+    mini_test = MiniImagenet(args.data_path, mode='test', n_way=args.n_way, k_shot=args.k_spt,
                              k_query=args.k_qry,
                              batchsz=100, resize=args.imgsz)
 
@@ -106,6 +106,9 @@ if __name__ == '__main__':
     argparser.add_argument('--update_step', type=int, help='task-level inner update steps', default=5)
     argparser.add_argument('--update_step_test', type=int, help='update steps for finetunning', default=10)
 
-    args = argparser.parse_args()
 
-    main()
+    argparser.add_argument('--data_path', type=int, help='data path', default='/scratch/cq2u24/Data/lsl/miniimagenet')
+
+    arg = argparser.parse_args()
+
+    main(args=arg)

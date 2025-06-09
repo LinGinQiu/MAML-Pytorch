@@ -1,10 +1,11 @@
-import  torch
+import torch
 from    torch import nn
 from    torch import optim
 from    torch.nn import functional as F
 from    torch.utils.data import TensorDataset, DataLoader
 from    torch import optim
 import  numpy as np
+import os # Import os for path manipulation
 
 from    learner import Learner
 from    copy import deepcopy
@@ -34,9 +35,6 @@ class Meta(nn.Module):
 
         self.net = Learner(config, args.imgc, args.imgsz)
         self.meta_optim = optim.Adam(self.net.parameters(), lr=self.meta_lr)
-
-
-
 
     def clip_grad_by_norm_(self, grad, max_norm):
         """
@@ -136,9 +134,6 @@ class Meta(nn.Module):
         # optimize theta parameters
         self.meta_optim.zero_grad()
         loss_q.backward()
-        # print('meta update')
-        # for p in self.net.parameters()[:5]:
-        # 	print(torch.norm(p).item())
         self.meta_optim.step()
 
 
@@ -217,11 +212,76 @@ class Meta(nn.Module):
 
         return accs
 
+    def save_model(self, path="model_weights.pth"):
+        """
+        Saves the state_dict of the meta-learner's net.
 
+        :param path: The file path to save the model to.
+        """
+        # Ensure the directory exists
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        torch.save(self.net.state_dict(), path)
+        print(f"Model saved to {path}")
+
+    def load_model(self, path="model_weights.pth"):
+        """
+        Loads the state_dict into the meta-learner's net.
+
+        :param path: The file path to load the model from.
+        """
+        if os.path.exists(path):
+            self.net.load_state_dict(torch.load(path))
+            print(f"Model loaded from {path}")
+        else:
+            print(f"No model found at {path}")
 
 
 def main():
-    pass
+    # This is a placeholder for how you might use the save_model function.
+    # In a real scenario, you'd define args, config, and then train the model.
+
+    # Example dummy arguments and config (replace with your actual setup)
+    class Args:
+        def __init__(self):
+            self.update_lr = 0.01
+            self.meta_lr = 0.001
+            self.n_way = 5
+            self.k_spt = 1
+            self.k_qry = 15
+            self.task_num = 32
+            self.update_step = 5
+            self.update_step_test = 10
+            self.imgc = 3 # Example image channels
+            self.imgsz = 84 # Example image size
+
+    class Config:
+        # Example config for Learner, adjust based on your Learner's __init__
+        def __init__(self):
+            self.conv_layers = [32, 32, 32, 32]
+            self.num_classes = 5
+
+    args = Args()
+    config = Config()
+
+    # Instantiate the Meta learner
+    meta_learner = Meta(args, config)
+
+    # --- Training loop placeholder ---
+    print("Simulating training...")
+    # In a real training loop, you would call meta_learner.forward(...) here
+    # For demonstration, let's just imagine some training has happened.
+
+    # --- Saving the model ---
+    save_dir = "checkpoints"
+    model_name = "meta_learner_final.pth"
+    save_path = os.path.join(save_dir, model_name)
+    meta_learner.save_model(save_path)
+
+    # --- Loading the model (for demonstration) ---
+    print("\nAttempting to load the model...")
+    new_meta_learner = Meta(args, config) # Create a new instance to load into
+    new_meta_learner.load_model(save_path)
+    print("Model loading demonstration complete.")
 
 
 if __name__ == '__main__':

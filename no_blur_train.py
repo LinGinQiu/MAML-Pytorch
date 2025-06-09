@@ -58,12 +58,12 @@ def main(args):
     # batchsz here means total episode number
     mini = NoBlurDataset(args.data_path, mode='train', n_way=args.n_way, k_shot=args.k_spt,
                         k_query=args.k_qry,
-                        batchsz=10000, resize=args.imgsz)
+                        batchsz=args.batchsize, resize=args.imgsz)
     mini_test = NoBlurDataset(args.data_path, mode='val', n_way=args.n_way, k_shot=args.k_spt,
                              k_query=args.k_qry,
                              batchsz=100, resize=args.imgsz)
 
-    for epoch in range(args.epoch//10000):
+    for epoch in range(args.epoch):
         # fetch meta_batchsz num of episode each time
         db = DataLoader(mini, args.task_num, shuffle=True, num_workers=1, pin_memory=True)
 
@@ -91,11 +91,29 @@ def main(args):
                 accs = np.array(accs_all_test).mean(axis=0).astype(np.float16)
                 print('Test acc:', accs)
 
+        # --- Saving the model ---
+        save_dir = args.save_path
+        model_name = f"meta_learner_in_epoch_{epoch}.pth"
+        save_path = os.path.join(save_dir, model_name)
+        maml.save_model(save_path)
+
+    # --- Saving the final model ---
+    save_dir = args.save_path
+    model_name = f"meta_learner_in_finnal.pth"
+    save_path = os.path.join(save_dir, model_name)
+    maml.save_model(save_path)
+
+    # --- Loading the model (for demonstration) ---
+    print("\nAttempting to load the model...")
+    new_meta_learner = Meta(args, config)  # Create a new instance to load into
+    new_meta_learner.load_model(save_path)
+    print("Model loading demonstration complete.")
+
 
 if __name__ == '__main__':
 
     argparser = argparse.ArgumentParser()
-    argparser.add_argument('--epoch', type=int, help='epoch number', default=100000)
+    argparser.add_argument('--epoch', type=int, help='epoch number', default=10)
     argparser.add_argument('--n_way', type=int, help='n way', default=4)
     argparser.add_argument('--k_spt', type=int, help='k shot for support set', default=1)
     argparser.add_argument('--k_qry', type=int, help='k shot for query set', default=15)
@@ -106,13 +124,19 @@ if __name__ == '__main__':
     argparser.add_argument('--update_lr', type=float, help='task-level inner update learning rate', default=0.01)
     argparser.add_argument('--update_step', type=int, help='task-level inner update steps', default=5)
     argparser.add_argument('--update_step_test', type=int, help='update steps for finetunning', default=10)
+    argparser.add_argument('--batchsize', type=int, help='how many tasks used in a epoch', default=10000)
 
 
     argparser.add_argument('--data_path', type=str, help='data path', default='/scratch/cq2u24/Data/l2l/no_blur_dataset')
+    argparser.add_argument('--save_path', type=str, help='save model path',
+                           default='/scratch/cq2u24/Model/l2l/no_blur_dataset_checkpoints')
 
     arg = argparser.parse_args()
     # print(os.getcwd())
     if os.getcwd() == '/Users/qiuchuanhang/PycharmProjects/MAML-Pytorch':
         arg.data_path = '/Volumes/YuLin/no_blur_dataset'
+        arg.save_path = '/Users/qiuchuanhang/PycharmProjects/MAML-Pytorch/backup'
+        arg.epoch = 2
+        arg.batchsize = 100
 
     main(args=arg)

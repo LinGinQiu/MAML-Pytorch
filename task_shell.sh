@@ -32,7 +32,7 @@ start_point=1
 # Put your home directory here
 local_path="/home/$username/"
 
-script_file_path="$local_path/MAML-Pytorch/no_blue_train.py"
+script_file_path="$local_path/MAML-Pytorch/no_blur_train.py"
 env_name="/scratch/cq2u24/conda-envs/meta_learning_env"
 PYTHON_EXECUTABLE="${env_name}/bin/python"
 

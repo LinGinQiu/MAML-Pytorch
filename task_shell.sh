@@ -32,7 +32,7 @@ start_point=1
 # Put your home directory here
 local_path="/home/$username/"
 
-script_file_path="$local_path/MAML-Pytorch/miniimagenet_train.py"
+script_file_path="$local_path/MAML-Pytorch/no_blue_train.py"
 env_name="/scratch/cq2u24/conda-envs/meta_learning_env"
 PYTHON_EXECUTABLE="${env_name}/bin/python"
 
@@ -47,8 +47,8 @@ echo "#!/bin/bash
 #SBATCH --mem=${max_memory}M
 #SBATCH -c 4
 #SBATCH --nodes=1
-#SBATCH -o log/meta_learning_test/%A-%a.out # 添加这行：标准输出将写入此文件
-#SBATCH -e log/meta_learning_test/%A-%a.err # 添加这行：标准错误将写入此文件
+#SBATCH -o log/%A-%a.out # 添加这行：标准输出将写入此文件
+#SBATCH -e log/%A-%a.err # 添加这行：标准错误将写入此文件
 
 . /etc/profile
 module purge

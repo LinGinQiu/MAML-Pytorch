@@ -183,6 +183,91 @@ class NoBlurDataset(Dataset):
         return self.batchsz
 
 
+class NoBlurTaskDataset():
+    """
+    put mini-imagenet files as :
+    root :
+        |- images/*.jpg includes all imgeas
+        |- train.csv
+        |- test.csv
+        |- val.csv
+    NOTICE: meta-learning is different from general supervised learning, especially the concept of batch and set.
+    batch: contains several sets
+    sets: conains n_way * k_shot for meta-train set, n_way * n_query for meta-test set.
+    """
+
+    def __init__(self, mode, batchsz,resize, startidx=0):
+        """
+
+        :param root: root path of mini-imagenet
+        :param mode: train, val or test
+        :param batchsz: batch size of sets, not batch of imgs
+        :param n_way:
+        :param k_shot:
+        :param k_query: num of qeruy imgs per class
+        :param resize: resize to
+        :param startidx: start to index label from startidx
+        """
+
+        self.batchsz = batchsz  # batch of set, not batch of imgs
+        self.n_way = 4  # n-way
+        self.k_shot = 1  # k-shot
+        self.k_query = 4  # for evaluation
+        self.setsz = self.n_way * self.k_shot  # num of samples per set
+        self.querysz = self.n_way * self.k_query  # number of samples per set for evaluation
+        self.resize = resize  # resize to
+        self.startidx = startidx  # index label not from 0, but from startidx
+
+
+        if mode == 'train':
+            self.transform = transforms.Compose([pil_loader,
+                                                 transforms.Resize((self.resize, self.resize)),
+                                                 # transforms.RandomHorizontalFlip(),
+                                                 # transforms.RandomRotation(5),
+                                                 transforms.ToTensor(),
+                                                 transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+                                                 ])
+        else:
+            self.transform = transforms.Compose([pil_loader,
+                                                 transforms.Resize((self.resize, self.resize)),
+                                                 transforms.ToTensor(),
+                                                 transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+                                                 ])
+
+        self.path = r'/Volumes/YuLin/no_blur_dataset/new_task'  # image pat
+        self.data = []
+
+    def create_task(self):
+
+        support_x = torch.FloatTensor(self.setsz, 3, self.resize, self.resize)
+
+        # [setsz]
+        support_y = np.zeros((self.setsz), dtype=int)
+        # [querysz, 3, resize, resize]
+        query_x = torch.FloatTensor(self.querysz, 3, self.resize, self.resize)
+        # [querysz]
+        query_y = np.zeros((self.querysz), dtype=int)
+
+        list_dir = os.listdir(self.path)
+        list_dir = [item for item in list_dir if item != '.DS_Store']
+        list_dir = sorted(list_dir)
+        for i, item in enumerate(list_dir):
+            img_dir = os.path.join(self.path, item)
+            img_list = os.listdir(img_dir)
+            img_list = [os.path.join(item, img) for img in img_list if img != '.DS_Store']
+            random.shuffle(img_list)
+            set_size = img_list[:self.k_shot+self.k_query]
+            for j, img in enumerate(set_size[:self.k_shot]):
+                support_x[i * (self.k_shot) + j] = self.transform(os.path.join(self.path, img))
+                support_y[i * (self.k_shot) + j] = np.array([i]).astype(np.int32)
+            for k, img in enumerate(set_size[self.k_shot:]):
+                query_x[i * (self.k_query) + k] = self.transform(os.path.join(self.path, img))
+                query_y[i * (self.k_query) + k] = np.array([i]).astype(np.int32)
+
+
+        return support_x, torch.LongTensor(support_y), query_x, torch.LongTensor(query_y)
+
+
 if __name__ == '__main__':
     # the following episode is to view one set of images via tensorboard.
     from torchvision.utils import make_grid
@@ -190,21 +275,26 @@ if __name__ == '__main__':
     import time
 
     plt.ion()
+    #
+    # mini = NoBlurDataset('/Volumes/YuLin/no_blur_dataset', mode='train', n_way=4, k_shot=1, k_query=1, batchsz=1000, resize=168)
+    #
+    # for i, set_ in enumerate(mini):
+    #     # support_x: [k_shot*n_way, 3, 84, 84]
+    #     support_x, support_y, query_x, query_y = set_
+    #
+    #     support_x = make_grid(support_x, nrow=2)
+    #     query_x = make_grid(query_x, nrow=2)
+    #
+    #     plt.figure(1)
+    #     plt.imshow(support_x.transpose(2, 0).numpy())
+    #     plt.pause(0.5)
+    #     plt.figure(2)
+    #     plt.imshow(query_x.transpose(2, 0).numpy())
+    #     plt.pause(0.5)
+    #
+    #     time.sleep(5)
 
-    mini = NoBlurDataset('/Volumes/YuLin/no_blur_dataset', mode='train', n_way=4, k_shot=1, k_query=1, batchsz=1000, resize=168)
+    mini = NoBlurTaskDataset(mode='val', batchsz=1000, resize=168)
+    support_x, support_y, query_x, query_y = mini.create_task()
+    print(support_x.shape, support_y.shape, query_x.shape, query_y.shape)
 
-    for i, set_ in enumerate(mini):
-        # support_x: [k_shot*n_way, 3, 84, 84]
-        support_x, support_y, query_x, query_y = set_
-
-        support_x = make_grid(support_x, nrow=2)
-        query_x = make_grid(query_x, nrow=2)
-
-        plt.figure(1)
-        plt.imshow(support_x.transpose(2, 0).numpy())
-        plt.pause(0.5)
-        plt.figure(2)
-        plt.imshow(query_x.transpose(2, 0).numpy())
-        plt.pause(0.5)
-
-        time.sleep(5)

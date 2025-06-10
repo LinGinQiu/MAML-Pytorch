@@ -50,8 +50,7 @@ def main(args):
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     print('Using device:', device)
     maml = Meta(args, config).to(device)
-    save_path= os.path.join(args.save_path, 'meta_learner_in_finnal.pth')
-    maml.load_model(save_path)
+
 
     tmp = filter(lambda x: x.requires_grad, maml.parameters())
     num = sum(map(lambda x: np.prod(x.shape), tmp))
@@ -64,13 +63,20 @@ def main(args):
                              batchsz=100, resize=args.imgsz)
 
     for epoch in range(args.epoch):
+        save_path = os.path.join(args.save_path, f'meta_learner_in_epoch_{epoch}.pth')
+        maml.load_model(save_path)
         # fetch meta_batchsz num of episode each time
+        accs_all_test = []
+        for i in range(20):
 
-        x_spt, y_spt, x_qry, y_qry = mini_val.create_task()
+            x_spt, y_spt, x_qry, y_qry = mini_val.create_task()
 
-        x_spt, y_spt, x_qry, y_qry = x_spt.to(device), y_spt.to(device), x_qry.to(device), y_qry.to(device)
-        accs = maml.finetunning(x_spt, y_spt, x_qry, y_qry)
+            x_spt, y_spt, x_qry, y_qry = x_spt.to(device), y_spt.to(device), x_qry.to(device), y_qry.to(device)
+            accs = maml.finetunning(x_spt, y_spt, x_qry, y_qry)
+            accs_all_test.append(accs)
 
+            # [b, update_step+1]
+        accs = np.array(accs_all_test).mean(axis=0).astype(np.float16)
         print('Test acc:', accs)
 
 

@@ -1,6 +1,5 @@
 import  torch, os
 import  numpy as np
-from setuptools.sandbox import save_path
 
 from    no_blur_dataset import NoBlurTaskDataset
 import  scipy.stats
@@ -67,7 +66,7 @@ def main(args):
     for epoch in range(args.epoch):
         # fetch meta_batchsz num of episode each time
 
-        x_spt, y_spt, x_qry, y_qry = mini_val.create_task
+        x_spt, y_spt, x_qry, y_qry = mini_val.create_task()
 
         x_spt, y_spt, x_qry, y_qry = x_spt.to(device), y_spt.to(device), x_qry.to(device), y_qry.to(device)
         accs = maml.finetunning(x_spt, y_spt, x_qry, y_qry)

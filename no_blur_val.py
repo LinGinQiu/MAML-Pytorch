@@ -1,5 +1,7 @@
 import  torch, os
 import  numpy as np
+from setuptools.sandbox import save_path
+
 from    no_blur_dataset import NoBlurTaskDataset
 import  scipy.stats
 from    torch.utils.data import DataLoader
@@ -49,7 +51,8 @@ def main(args):
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     print('Using device:', device)
     maml = Meta(args, config).to(device)
-    maml.load_model(r'/Users/qiuchuanhang/PycharmProjects/MAML-Pytorch/backup/no_blur_dataset_checkpoints/meta_learner_in_finnal.pth')
+    save_path= os.path.join(args.save_path, 'meta_learner_in_finnal.pth')
+    maml.load_model(save_path)
 
     tmp = filter(lambda x: x.requires_grad, maml.parameters())
     num = sum(map(lambda x: np.prod(x.shape), tmp))
